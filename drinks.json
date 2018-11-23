@@ -1,0 +1,18 @@
+[
+    {
+        "name": "Rum Cola",
+        "recipe": [
+            [
+                {
+                    "ingredient": "rum",
+                    "volume": 40,
+                    "delay": 2000
+                },
+                {
+                    "ingredient": "cola",
+                    "volume": 300
+                }
+            ]
+        ]
+    }
+]

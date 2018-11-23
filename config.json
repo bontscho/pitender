@@ -1,0 +1,9 @@
+{
+    "flow_rate": 1,
+    "pumps": {
+        "gin": 1,
+        "tonic": 6,
+        "cola": 9,
+        "rum": 12
+    }
+}
