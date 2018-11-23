@@ -1,6 +1,7 @@
 from flask import Flask, jsonify, abort
 from lib.config import db
 from lib.ingredient import ingredients
+from lib.routes.drinks import drink_routes
 from lib.models import Drink, RecipeIngredientInstruction, RecipeStep, Ingredient, PumpConfig
 from threading import Thread, Lock
 from playhouse.shortcuts import model_to_dict
@@ -11,6 +12,7 @@ busy_lock = Lock()
 
 app = Flask(__name__)
 app.register_blueprint(ingredients)
+app.register_blueprint(drink_routes)
 
 @app.before_request
 def before_request():
@@ -35,6 +37,8 @@ def make(id):
     if drink is None:
         abort(404)
 
+    with busy_lock:
+        busy = True
     drink_thread = Thread(target=make_drink, args=[drink])
     drink_thread.start()
 
@@ -42,8 +46,7 @@ def make(id):
 
 def make_drink(drink: Drink):
     global busy
-    with busy_lock:
-        busy = True
+    
     print("START: Drink {}".format(drink.name))
 
     for step in drink.recipe_steps.order_by(RecipeStep.order.asc()):
@@ -68,28 +71,18 @@ def handle_instruction(instruction: RecipeIngredientInstruction):
     pump_configs = instruction.ingredient.pump_configs
     num_pumps = pump_configs.count()
     # 100ml pro min in sec
-    time_needed = instruction.volume/200*60/num_pumps
+    time_needed = instruction.volume/100*60/num_pumps
 
     print("START: Pouring {}ml of {} over a period of {}s from {} pump(s)".format(instruction.volume, instruction.ingredient.name, time_needed, num_pumps))
 
     for pump in pump_configs:
+        # GPIO(pin) => HIGH
         print("PUMP PIN #{} ({}): ACTIVATE".format(pump.pin, instruction.ingredient.name))
     
     time.sleep(time_needed)
 
     for pump in pump_configs:
+        # GPIO(pin) => LOW
         print("PUMP PIN #{} ({}): DEACTIVATE".format(pump.pin, instruction.ingredient.name))
 
     print("DONE: {}ml of {}".format(instruction.volume, instruction.ingredient.name))
-
-
-def handle_starting():
-    global busy
-    busy = True
-    time.sleep(10)
-    busy = False
-
-@app.route('/status')
-def status():
-    global busy
-    return str(busy == True)
