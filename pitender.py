@@ -7,12 +7,27 @@ from threading import Thread, Lock
 from playhouse.shortcuts import model_to_dict
 import json
 import time
+import signal
+import sys
+import RPi.GPIO as GPIO
 
 busy_lock = Lock()
 
 app = Flask(__name__)
 app.register_blueprint(ingredients)
 app.register_blueprint(drink_routes)
+
+# SETUP pins
+GPIO.setmode(GPIO.BCM)
+for c in PumpConfig.select():
+    GPIO.setup(c.pin, GPIO.OUT)
+
+
+def signal_handler(sig, frame):
+    print('You pressed Ctrl+C!')
+    GPIO.cleanup()
+    sys.exit(0)
+
 
 @app.before_request
 def before_request():
