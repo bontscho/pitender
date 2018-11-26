@@ -94,12 +94,14 @@ def handle_instruction(instruction: RecipeIngredientInstruction):
 
     for pump in pump_configs:
         # GPIO(pin) => HIGH
+        GPIO.output(pump.pin, GPIO.HIGH)
         print("PUMP PIN #{} ({}): ACTIVATE".format(pump.pin, instruction.ingredient.name))
     
     time.sleep(time_needed)
 
     for pump in pump_configs:
         # GPIO(pin) => LOW
+        GPIO.output(pump.pin, GPIO.LOW)
         print("PUMP PIN #{} ({}): DEACTIVATE".format(pump.pin, instruction.ingredient.name))
 
     print("DONE: {}ml of {}".format(instruction.volume, instruction.ingredient.name))
