@@ -19,6 +19,7 @@ app.register_blueprint(drink_routes)
 
 # SETUP pins
 GPIO.setmode(GPIO.BCM)
+GPIO.setwarnings(False)
 for c in PumpConfig.select():
     GPIO.setup(c.pin, GPIO.OUT)
 
