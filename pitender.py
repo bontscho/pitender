@@ -28,6 +28,7 @@ def signal_handler(sig, frame):
     GPIO.cleanup()
     sys.exit(0)
 
+signal.signal(signal.SIGINT, signal_handler)
 
 @app.before_request
 def before_request():
