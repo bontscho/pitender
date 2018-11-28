@@ -4,12 +4,12 @@ from lib.ingredient import ingredients
 from lib.routes.drinks import drink_routes
 from lib.models import Drink, RecipeIngredientInstruction, RecipeStep, Ingredient, PumpConfig
 from threading import Thread, Lock
-from playhouse.shortcuts import model_to_dict
+from playhouse.shortcuts import model_to_dict, fn
 import json
 import time
 import signal
 import sys
-import RPi.GPIO as GPIO
+# import RPi.GPIO as GPIO
 
 busy_lock = Lock()
 
@@ -17,16 +17,18 @@ app = Flask(__name__)
 app.register_blueprint(ingredients)
 app.register_blueprint(drink_routes)
 
+
 # SETUP pins
-GPIO.setmode(GPIO.BCM)
-GPIO.setwarnings(False)
+# GPIO.setmode(GPIO.BCM)
+# GPIO.setwarnings(False)
 for c in PumpConfig.select():
-    GPIO.setup(c.pin, GPIO.OUT)
+    pass
+    # GPIO.setup(c.pin, GPIO.OUT)
 
 
 def signal_handler(sig, frame):
     print('You pressed Ctrl+C!')
-    GPIO.cleanup()
+    # GPIO.cleanup()
     sys.exit(0)
 
 signal.signal(signal.SIGINT, signal_handler)
@@ -87,21 +89,22 @@ def make_drink(drink: Drink):
 def handle_instruction(instruction: RecipeIngredientInstruction):
     pump_configs = instruction.ingredient.pump_configs
     num_pumps = pump_configs.count()
-    # 100ml pro min in sec
-    time_needed = instruction.volume/100*60/num_pumps
+    # get combined flowrate
+    total_flowrate = pump_configs.select(fn.SUM(PumpConfig.flow_rate)).scalar()
+    time_needed = instruction.volume/total_flowrate*60/num_pumps
 
     print("START: Pouring {}ml of {} over a period of {}s from {} pump(s)".format(instruction.volume, instruction.ingredient.name, time_needed, num_pumps))
 
     for pump in pump_configs:
         # GPIO(pin) => HIGH
-        GPIO.output(pump.pin, GPIO.HIGH)
+        # GPIO.output(pump.pin, GPIO.HIGH)
         print("PUMP PIN #{} ({}): ACTIVATE".format(pump.pin, instruction.ingredient.name))
     
     time.sleep(time_needed)
 
     for pump in pump_configs:
         # GPIO(pin) => LOW
-        GPIO.output(pump.pin, GPIO.LOW)
+        # GPIO.output(pump.pin, GPIO.LOW)
         print("PUMP PIN #{} ({}): DEACTIVATE".format(pump.pin, instruction.ingredient.name))
 
     print("DONE: {}ml of {}".format(instruction.volume, instruction.ingredient.name))

@@ -15,6 +15,7 @@ class Ingredient(PitenderModel):
 class PumpConfig(PitenderModel):
     pin = IntegerField(null=False)
     ingredient = ForeignKeyField(Ingredient, backref='pump_configs')
+    flow_rate = IntegerField(null=False)
 
 class Drink(PitenderModel):
     name = CharField(null=False)
