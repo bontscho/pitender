@@ -9,7 +9,7 @@ import json
 import time
 import signal
 import sys
-# import RPi.GPIO as GPIO
+import RPi.GPIO as GPIO
 
 busy_lock = Lock()
 
@@ -19,16 +19,16 @@ app.register_blueprint(drink_routes)
 
 
 # SETUP pins
-# GPIO.setmode(GPIO.BCM)
-# GPIO.setwarnings(False)
+GPIO.setmode(GPIO.BCM)
+GPIO.setwarnings(False)
 for c in PumpConfig.select():
-    pass
-    # GPIO.setup(c.pin, GPIO.OUT)
+    GPIO.setup(c.pin, GPIO.OUT)
+    GPIO.output(c.pin, GPIO.HIGH)
 
 
 def signal_handler(sig, frame):
     print('You pressed Ctrl+C!')
-    # GPIO.cleanup()
+    GPIO.cleanup()
     sys.exit(0)
 
 signal.signal(signal.SIGINT, signal_handler)
@@ -97,14 +97,14 @@ def handle_instruction(instruction: RecipeIngredientInstruction):
 
     for pump in pump_configs:
         # GPIO(pin) => HIGH
-        # GPIO.output(pump.pin, GPIO.HIGH)
+        GPIO.output(pump.pin, GPIO.LOW)
         print("PUMP PIN #{} ({}): ACTIVATE".format(pump.pin, instruction.ingredient.name))
     
     time.sleep(time_needed)
 
     for pump in pump_configs:
         # GPIO(pin) => LOW
-        # GPIO.output(pump.pin, GPIO.LOW)
+        GPIO.output(pump.pin, GPIO.HIGH)
         print("PUMP PIN #{} ({}): DEACTIVATE".format(pump.pin, instruction.ingredient.name))
 
     print("DONE: {}ml of {}".format(instruction.volume, instruction.ingredient.name))
